@@ -20,6 +20,8 @@ class IseedCommand extends Command {
 	 */
 	protected $description = 'Generate seed file from table';
 
+	protected $chunkSize;
+
 	/**
 	 * Create a new command instance.
 	 *
@@ -28,6 +30,29 @@ class IseedCommand extends Command {
 	public function __construct()
 	{
 		parent::__construct();
+	}
+
+	/**
+	 * Call the function to generate the seed file based on options provided.
+	 *
+	 * @return void
+	 */
+	protected function makeSeedFile($table) {
+		// generate file and class name based on name of the table
+		list($fileName, $className) = $this->generateFileName($table);
+		
+		// if file does not exist or force option is turned on generate seeder
+		if(!\File::exists($fileName) || $this->option('force')) {
+			$this->printResult(app('iseed')->generateSeed($table, $this->option('database'), $this->chunkSize), $table);
+			continue;
+		}
+
+		if($this->confirm('File ' . $className . ' already exist. Do you wish to override it? [yes|no]')) {
+			// if user said yes overwrite old seeder
+			$this->printResult(app('iseed')->generateSeed($table, $this->option('database'), $this->chunkSize), $table);
+		}
+
+		return;
 	}
 
 	/**
@@ -43,27 +68,26 @@ class IseedCommand extends Command {
 		}
 
 		$tables = explode(",", $this->argument('tables'));
-		$chunkSize = intval($this->option('max'));
+		$this->chunkSize = intval($this->option('max'));
 
-		if($chunkSize < 1) {
-			$chunkSize = null;
+		if($this->chunkSize < 1) {
+			$this->chunkSize = null;
 		}
 		
 		foreach ($tables as $table) {
 			$table = trim($table);
 
-			// generate file and class name based on name of the table
-			list($fileName, $className) = $this->generateFileName($table);
-			
-			// if file does not exist or force option is turned on generate seeder
-			if(!\File::exists($fileName) || $this->option('force')) {
-				$this->printResult(app('iseed')->generateSeed($table, $this->option('database'), $chunkSize), $table);
-				continue;
-			}
-
-			if($this->confirm('File ' . $className . ' already exist. Do you wish to override it? [yes|no]')) {
-				// if user said yes overwrite old seeder
-				$this->printResult(app('iseed')->generateSeed($table, $this->option('database'), $chunkSize), $table);
+			if ($table == '*') {
+				$database = $this->option('database');
+				$database_name = $this->option('database')['database'];
+				$query = $database->prepare("SHOW TABLES FROM $database_name"); 
+				$query->execute();
+				while($table = $query->fetch(PDO::FETCH_ASSOC)) { 
+					makeSeedFile($table[0]);    // make seed file for each table.
+				}
+				return;
+			} else {
+				makeSeedFile($table);
 			}
 		}
 
