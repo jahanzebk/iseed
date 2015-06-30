@@ -3,6 +3,10 @@
 [![Build Status](https://travis-ci.org/orangehill/iseed.png)](http://travis-ci.org/orangehill/iseed)
 [![Latest Stable Version](https://poser.pugx.org/orangehill/iseed/v/stable.png)](https://packagist.org/packages/orangehill/iseed) [![Total Downloads](https://poser.pugx.org/orangehill/iseed/downloads.png)](https://packagist.org/packages/orangehill/iseed)
 
+## What's Different
+
+This fork is made off of Orangehill/iseed to implement the feature of allowing you to run "php artisan iseed *" to generate all seed files for all tables of a database.
+
 ## Installation
 
 1) For Laravel 5 instalation edit your project's `composer.json` file to require `orangehill/iseed`.
